@@ -1,6 +1,7 @@
 # File Viewer
 
 A terminal-based file manager written in Go with a beautiful TUI interface.
+This was implemented from one of my other projects and wanted to take this alone as another individual project. 
 
 ## Features
 
