@@ -157,7 +157,7 @@ func (m *AppModel) handleNormalMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			UpdatePreview(m.Model)
 		}
 
-	case "right", "l", "enter":
+	case "right", "l":
 		if len(m.Files) == 0 {
 			return m, nil
 		}
@@ -181,7 +181,7 @@ func (m *AppModel) handleNormalMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.loadCurrentDir()
 		}
 
-	case "o": // Open file in editor
+	case "o", "enter": // Open file in editor
 		if len(m.Files) == 0 {
 			return m, nil
 		}

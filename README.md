@@ -51,21 +51,26 @@ The application follows a modular architecture with clear separation of concerns
 - **UI**: User interface components and rendering
 - **Main**: Application entry point and program setup
 
+## Features to be added
+
+- [ ] Open files with respective software (audio files - mpd, video files - mpv, code - nano.....)
+- [ ] Syntax highlighting for Code/File preview
+
 ## Building
 
 ```bash
 # Build the application
-go build -o fileviewer ./cmd/fileviewer
+go build -o bullseye ./cmd/bullseye
 
 # Run the application
-./fileviewer
+./bullseye
 ```
 
 ## Configuration
 
 The application uses TOML configuration files. Configuration can be placed in:
 
-1. `~/.config/yazi-go/config.toml` (user configuration)
+1. `~/.config/bullseye/config.toml` (user configuration)
 2. `./config.toml` (local configuration)
 
 ### Configuration Options
@@ -89,7 +94,7 @@ hover_bg_color = "#000000"
 
 - **Navigation**:
   - `h` / `left`: Go to parent directory
-  - `l` / `right` / `enter`: Enter directory
+  - `l` / `right`: Enter directory
   - `j` / `down`: Move down
   - `k` / `up`: Move up
   - `g`: Go to top
@@ -97,7 +102,7 @@ hover_bg_color = "#000000"
   - `~`: Go to home directory
 
 - **File Operations**:
-  - `o`: Open file in editor
+  - `enter`: Open file in editor
   - `r`: Refresh directory
 
 - **View Options**:
@@ -123,7 +128,15 @@ hover_bg_color = "#000000"
 - [lipgloss](https://github.com/charmbracelet/lipgloss): Styling library
 - [go-toml](https://github.com/pelletier/go-toml): TOML parsing
 
+## Contribution
+
+- **Find an Issue**: Look through our issues page for a bug or feature you'd like to work on. Comment on the issue to let others know you're working on it.
+- **Fork the Repository**: Start by forking the repository to your own GitHub account.
+- **Create a New Branch**: Before you start coding, create a new branch from main with a descriptive name (e.g., fix-preview-bug or feature-async-copy).
+- **Write Your Code**: Add your code, making sure to follow the project's coding style and conventions.
+- **Test Your Changes**: We highly recommend writing tests for new features or bug fixes. This ensures that your code works as expected and helps prevent future regressions.
+- **Submit a Pull Request**: When you're ready, submit a pull request to the main branch. Provide a clear title and description of your changes.
+
 ## License
 
 This project is open source and available under the MIT License.
-

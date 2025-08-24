@@ -41,7 +41,7 @@ func LoadConfig() Config {
 	}
 
 	homeDir, _ := os.UserHomeDir()
-	configPath := filepath.Join(homeDir, ".config", "yazi-go", "config.toml")
+	configPath := filepath.Join(homeDir, ".config", "bullseye", "config.toml")
 
 	data, err := os.ReadFile(configPath)
 	if err != nil {
