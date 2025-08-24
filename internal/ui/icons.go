@@ -211,3 +211,4 @@ func GetFileIcon(file models.FileInfo) string {
 		return "" // nf-fa-file_o (Default file)
 	}
 }
+

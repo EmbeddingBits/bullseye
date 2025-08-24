@@ -20,6 +20,7 @@ type Config struct {
 	ExecutableColor    string `toml:"executable_color"`
 	SymlinkColor       string `toml:"symlink_color"`
 	PreviewBorderColor string `toml:"preview_border_color"`
+	HoverBgColor       string `toml:"hover_bg_color"`
 }
 
 // LoadConfig loads configuration from file or returns default configuration
@@ -36,6 +37,7 @@ func LoadConfig() Config {
 		ExecutableColor:    "46",  // Green
 		SymlinkColor:       "14",  // Cyan
 		PreviewBorderColor: "240", // Gray
+		HoverBgColor:       "0",   // Black
 	}
 
 	homeDir, _ := os.UserHomeDir()
@@ -88,6 +90,9 @@ func LoadConfig() Config {
 	}
 	if config.PreviewBorderColor == "" {
 		config.PreviewBorderColor = defaultConfig.PreviewBorderColor
+	}
+	if config.HoverBgColor == "" {
+		config.HoverBgColor = defaultConfig.HoverBgColor
 	}
 
 	return config

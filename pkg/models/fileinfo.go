@@ -34,3 +34,4 @@ type Model struct {
 	SearchMode     bool
 	SearchQuery    string
 }
+

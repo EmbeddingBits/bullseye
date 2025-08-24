@@ -28,7 +28,8 @@ func GetFileStyle(file models.FileInfo, isSelected bool, cfg config.Config) lipg
 	style := lipgloss.NewStyle().Foreground(lipgloss.Color(color))
 
 	if isSelected {
-		style = style.Foreground(lipgloss.Color(cfg.SelectedItemColor)).Bold(true)
+		// Use foreground color with configured hover background instead of highlighting
+		style = style.Foreground(lipgloss.Color(color)).Background(lipgloss.Color(cfg.HoverBgColor)).Bold(false)
 	}
 
 	return style

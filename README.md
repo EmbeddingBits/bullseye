@@ -82,6 +82,7 @@ hidden_file_color = "#928374"
 executable_color = "#b8bb26"
 symlink_color = "#83a598"
 preview_border_color = "#504945"
+hover_bg_color = "#000000"
 ```
 
 ## Keyboard Shortcuts
@@ -125,3 +126,4 @@ preview_border_color = "#504945"
 ## License
 
 This project is open source and available under the MIT License.
+
