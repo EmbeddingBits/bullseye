@@ -42,6 +42,10 @@ file_viewer/
 └── README.md                # This file
 ```
 
+## Preview
+
+![preview](preview.png)
+
 ## Architecture
 
 The application follows a modular architecture with clear separation of concerns:
