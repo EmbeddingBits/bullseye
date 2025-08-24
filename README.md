@@ -59,6 +59,8 @@ The application follows a modular architecture with clear separation of concerns
 - [ ] Proper rendering of layout and truncating the preview part.
 - [ ] Image Rendering
 - [ ] PDF preview rendering
+- [ ] Copy Paste feature
+- [ ] Vim-like Visual mode
 
 ## Building
 
