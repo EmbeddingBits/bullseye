@@ -52,10 +52,13 @@ The application follows a modular architecture with clear separation of concerns
 - **UI**: User interface components and rendering
 - **Main**: Application entry point and program setup
 
-## Features to be added
+## Features/Bugs to be added/fixed
 
 - [ ] Open files with respective software (audio files - mpd, video files - mpv, code - nano.....)
 - [ ] Syntax highlighting for Code/File preview
+- [ ] Proper rendering of layout and truncating the preview part.
+- [ ] Image Rendering
+- [ ] PDF preview rendering
 
 ## Building
 
