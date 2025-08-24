@@ -5,10 +5,8 @@ import (
 	"io/fs"
 	"os"
 	"os/exec"
-//	"os/user"
 	"path/filepath"
 	"sort"
-//	"strconv"
 	"strings"
 	"time"
 
@@ -19,10 +17,38 @@ import (
 
 var (
 	textExtensions = []string{
-		".txt", ".go", ".md", ".json", ".yaml", ".yml", ".toml", ".ini", ".cfg", ".conf",
-		".sh", ".py", ".js", ".ts", ".html", ".css", ".c", ".cpp", ".h", ".hpp", ".java",
-		".rs", ".rb", ".php", ".sql", ".xml", ".log", ".pub", ".vim", ".lua", ".r", ".R",
-		".dockerfile", ".gitignore", ".env", ".editorconfig", ".prettierrc",
+		// Programming languages
+		".txt", ".go", ".py", ".js", ".ts", ".jsx", ".tsx", ".html", ".htm", ".css", ".scss", ".sass", ".less",
+		".php", ".rb", ".java", ".c", ".cpp", ".cc", ".cxx", ".h", ".hpp", ".cs", ".rs", ".swift", ".kt",
+		".scala", ".clj", ".cljs", ".hs", ".elm", ".lua", ".r", ".sql", ".sh", ".bash", ".zsh", ".fish",
+		".ps1", ".bat", ".cmd", ".vim", ".lua", ".pl", ".pm", ".awk", ".sed",
+		
+		// Markup and configuration
+		".md", ".markdown", ".json", ".yaml", ".yml", ".toml", ".xml", ".csv", ".ini", ".cfg", ".conf",
+		".env", ".gitignore", ".gitconfig", ".gitattributes", ".gitmodules", ".editorconfig",
+		".prettierrc", ".eslintrc", ".babelrc", ".npmrc", ".yarnrc",
+		
+		// Documentation and text
+		".rst", ".org", ".tex", ".bib", ".man", ".1", ".2", ".3", ".4", ".5", ".6", ".7", ".8", ".9",
+		".readme", ".changelog", ".authors", ".contributors", ".copying", ".license", ".licence",
+		".todo", ".fixme", ".bugs", ".news", ".thanks", ".install",
+		
+		// Web and styles  
+		".vue", ".svelte", ".astro", ".styl", ".stylus", ".postcss",
+		
+		// Data formats
+		".tsv", ".psv", ".dsv", ".ndjson", ".jsonl", ".geojson", ".topojson",
+		
+		// Configuration files (no extension)
+		"dockerfile", "makefile", "cmakelists.txt", "vagrantfile", "gemfile", "rakefile",
+		"package.json", "composer.json", "cargo.toml", "pyproject.toml", "poetry.lock",
+		"requirements.txt", "pipfile", "pipfile.lock", "go.mod", "go.sum",
+		
+		// Log and temporary files
+		".log", ".out", ".err", ".tmp", ".temp", ".bak", ".backup", ".orig", ".swp", ".swo",
+		
+		// Others
+		".pub", ".pem", ".key", ".crt", ".cer", ".p12", ".pfx", ".jks",
 	}
 )
 
@@ -274,61 +300,158 @@ func (m *model) updatePreview() {
 		m.sortFiles(filtered)
 		
 		var sb strings.Builder
-		sb.WriteString(fmt.Sprintf("Directory: %s\n", selectedFile.Entry.Name()))
+		sb.WriteString(fmt.Sprintf(" %s\n", selectedFile.Entry.Name()))
 		sb.WriteString(fmt.Sprintf("Items: %d\n\n", len(filtered)))
 		
 		for i, f := range filtered {
-			if i >= 50 { // Limit preview
-				sb.WriteString("... (and more)")
+			if i >= 100 { // Show more items in preview
+				sb.WriteString("... and more files")
 				break
 			}
-			icon := "📄"
-			if f.Entry.IsDir() {
-				icon = "📁"
-			}
+			icon := m.getFileIcon(f)
 			sb.WriteString(fmt.Sprintf("%s %s\n", icon, f.Entry.Name()))
 		}
 		m.preview = sb.String()
 	} else {
-		// Check if it's a text file
-		ext := strings.ToLower(filepath.Ext(selectedFile.Entry.Name()))
-		isText := false
-		for _, textExt := range textExtensions {
-			if ext == textExt {
-				isText = true
-				break
-			}
-		}
-		
-		if !isText {
-			fileInfo, _ := os.Stat(fullPath)
-			var sb strings.Builder
-			sb.WriteString(fmt.Sprintf("File: %s\n", selectedFile.Entry.Name()))
-			sb.WriteString(fmt.Sprintf("Size: %s\n", formatSize(selectedFile.Size)))
-			if fileInfo != nil {
-				sb.WriteString(fmt.Sprintf("Modified: %s\n", selectedFile.ModTime.Format("2006-01-02 15:04:05")))
-				sb.WriteString(fmt.Sprintf("Mode: %s\n", fileInfo.Mode().String()))
-			}
-			sb.WriteString("\nBinary or unsupported file type")
-			m.preview = sb.String()
-			return
-		}
-		
+		// Always try to read as text first
 		content, err := os.ReadFile(fullPath)
 		if err != nil {
 			m.preview = fmt.Sprintf("Error reading file: %v", err)
 			return
 		}
 		
-		// Add file info header
+		// Check if it's a text file by extension or content
+		fileName := strings.ToLower(selectedFile.Entry.Name())
+		ext := strings.ToLower(filepath.Ext(selectedFile.Entry.Name()))
+		isText := false
+		
+		// Check by extension first
+		for _, textExt := range textExtensions {
+			if ext == textExt || strings.HasSuffix(fileName, strings.ToLower(textExt)) {
+				isText = true
+				break
+			}
+		}
+		
+		// If not recognized by extension, check if it's likely text by content
+		if !isText {
+			isText = isLikelyTextFile(content)
+		}
+		
 		var sb strings.Builder
-		sb.WriteString(fmt.Sprintf("File: %s\n", selectedFile.Entry.Name()))
+		
+		// Always show file info header
+		icon := m.getFileIcon(selectedFile)
+		sb.WriteString(fmt.Sprintf("%s %s\n", icon, selectedFile.Entry.Name()))
 		sb.WriteString(fmt.Sprintf("Size: %s\n", formatSize(selectedFile.Size)))
-		sb.WriteString(fmt.Sprintf("Modified: %s\n\n", selectedFile.ModTime.Format("2006-01-02 15:04:05")))
-		sb.WriteString(string(content))
+		sb.WriteString(fmt.Sprintf("Modified: %s\n", selectedFile.ModTime.Format("2006-01-02 15:04:05")))
+		
+		// Show file permissions/mode
+		if fileInfo, err := os.Stat(fullPath); err == nil {
+			sb.WriteString(fmt.Sprintf("Mode: %s\n", fileInfo.Mode().String()))
+		}
+		
+		sb.WriteString("\n")
+		
+		if isText && len(content) > 0 {
+			// Display text content
+			contentStr := string(content)
+			
+			// Limit preview size for very large files
+			if len(contentStr) > 50000 {
+				lines := strings.Split(contentStr, "\n")
+				if len(lines) > 500 {
+					contentStr = strings.Join(lines[:500], "\n") + "\n\n... (file truncated for preview)"
+				}
+			}
+			
+			sb.WriteString(contentStr)
+		} else if len(content) == 0 {
+			sb.WriteString("(empty file)")
+		} else {
+			// For binary files, show hex preview and file type info
+			sb.WriteString("Binary file - hex preview:\n\n")
+			
+			// Show first 256 bytes as hex
+			hexBytes := content
+			if len(hexBytes) > 256 {
+				hexBytes = hexBytes[:256]
+			}
+			
+			for i := 0; i < len(hexBytes); i += 16 {
+				// Address
+				sb.WriteString(fmt.Sprintf("%08x: ", i))
+				
+				// Hex bytes
+				end := i + 16
+				if end > len(hexBytes) {
+					end = len(hexBytes)
+				}
+				
+				for j := i; j < end; j++ {
+					sb.WriteString(fmt.Sprintf("%02x ", hexBytes[j]))
+				}
+				
+				// Padding for incomplete lines
+				for j := end; j < i+16; j++ {
+					sb.WriteString("   ")
+				}
+				
+				// ASCII representation
+				sb.WriteString(" |")
+				for j := i; j < end; j++ {
+					if hexBytes[j] >= 32 && hexBytes[j] <= 126 {
+						sb.WriteByte(hexBytes[j])
+					} else {
+						sb.WriteString(".")
+					}
+				}
+				sb.WriteString("|\n")
+			}
+			
+			if len(content) > 256 {
+				sb.WriteString(fmt.Sprintf("\n... (%d more bytes)", len(content)-256))
+			}
+		}
 		
 		m.preview = sb.String()
 	}
+}
+
+// Helper function to detect if content is likely text
+func isLikelyTextFile(content []byte) bool {
+	if len(content) == 0 {
+		return true
+	}
+	
+	// Check first 512 bytes for null bytes (common in binary files)
+	checkBytes := content
+	if len(checkBytes) > 512 {
+		checkBytes = checkBytes[:512]
+	}
+	
+	nullCount := 0
+	for _, b := range checkBytes {
+		if b == 0 {
+			nullCount++
+		}
+	}
+	
+	// If more than 1% null bytes, likely binary
+	if float64(nullCount)/float64(len(checkBytes)) > 0.01 {
+		return false
+	}
+	
+	// Check for mostly printable characters
+	printableCount := 0
+	for _, b := range checkBytes {
+		if (b >= 32 && b <= 126) || b == '\t' || b == '\n' || b == '\r' {
+			printableCount++
+		}
+	}
+	
+	// If more than 95% printable, likely text
+	return float64(printableCount)/float64(len(checkBytes)) > 0.95
 }
 
 func formatSize(size int64) string {
@@ -532,36 +655,258 @@ func (m model) getVisibleHeight() int {
 }
 
 func (m model) getFileIcon(file FileInfo) string {
+	name := strings.ToLower(file.Entry.Name())
+	ext := strings.ToLower(filepath.Ext(file.Entry.Name()))
+	
 	if file.Entry.IsDir() {
-		return "📁"
+		// Special directory icons
+		switch filepath.Base(name) {
+		case ".git":
+			return ""
+		case ".config":
+			return ""
+		case "node_modules":
+			return ""
+		case "downloads":
+			return "󰉍"
+		case "documents":
+			return "󰲂"
+		case "pictures", "images":
+			return ""
+		case "music", "audio":
+			return "󱍙"
+		case "videos", "movies":
+			return ""
+		case "desktop":
+			return ""
+		case "home":
+			return "󱂵"
+		default:
+			return ""
+		}
 	}
 	
-	ext := strings.ToLower(filepath.Ext(file.Entry.Name()))
+	// Special file names
+	switch name {
+	case "dockerfile":
+		return ""
+	case "docker-compose.yml", "docker-compose.yaml":
+		return ""
+	case "makefile":
+		return ""
+	case "cmakelists.txt":
+		return ""
+	case "readme.md", "readme.txt", "readme":
+		return ""
+	case "license", "licence":
+		return ""
+	case ".gitignore":
+		return ""
+	case ".gitconfig":
+		return ""
+	case "package.json":
+		return ""
+	case "cargo.toml":
+		return ""
+	case "go.mod":
+		return ""
+	case "requirements.txt":
+		return ""
+	}
+	
+	// File extensions
 	switch ext {
+	// Programming languages
 	case ".go":
-		return "🐹"
+		return ""
 	case ".py":
-		return "🐍"
-	case ".js", ".ts":
-		return "📜"
-	case ".html":
-		return "🌐"
+		return ""
+	case ".js", ".mjs":
+		return ""
+	case ".ts":
+		return ""
+	case ".jsx":
+		return ""
+	case ".tsx":
+		return ""
+	case ".html", ".htm":
+		return ""
 	case ".css":
-		return "🎨"
-	case ".md":
-		return "📝"
-	case ".json", ".yaml", ".yml", ".toml":
-		return "⚙️"
-	case ".jpg", ".jpeg", ".png", ".gif", ".svg":
-		return "🖼️"
-	case ".mp3", ".wav", ".flac":
-		return "🎵"
-	case ".mp4", ".avi", ".mkv":
-		return "🎬"
-	case ".zip", ".tar", ".gz", ".rar":
-		return "📦"
+		return ""
+	case ".scss", ".sass":
+		return ""
+	case ".less":
+		return ""
+	case ".vue":
+		return "﵂"
+	case ".php":
+		return ""
+	case ".rb":
+		return ""
+	case ".java":
+		return ""
+	case ".c":
+		return ""
+	case ".cpp", ".cc", ".cxx":
+		return ""
+	case ".h", ".hpp":
+		return ""
+	case ".cs":
+		return ""
+	case ".rs":
+		return ""
+	case ".swift":
+		return ""
+	case ".kt":
+		return ""
+	case ".scala":
+		return ""
+	case ".clj", ".cljs":
+		return ""
+	case ".hs":
+		return ""
+	case ".elm":
+		return ""
+	case ".lua":
+		return ""
+	case ".r":
+		return "ﳒ"
+	case ".sql":
+		return ""
+	case ".sh", ".bash", ".zsh", ".fish":
+		return ""
+	case ".ps1":
+		return ""
+	case ".bat", ".cmd":
+		return ""
+	
+	// Markup and data
+	case ".md", ".markdown":
+		return ""
+	case ".json":
+		return ""
+	case ".yaml", ".yml":
+		return ""
+	case ".toml":
+		return ""
+	case ".xml":
+		return ""
+	case ".csv":
+		return ""
+	case ".ini", ".cfg", ".conf":
+		return ""
+	case ".env":
+		return ""
+	
+	// Images
+	case ".jpg", ".jpeg":
+		return ""
+	case ".png":
+		return ""
+	case ".gif":
+		return ""
+	case ".svg":
+		return "ﰟ"
+	case ".ico":
+		return ""
+	case ".bmp":
+		return ""
+	case ".webp":
+		return ""
+	case ".tiff", ".tif":
+		return ""
+	
+	// Audio
+	case ".mp3":
+		return ""
+	case ".wav":
+		return ""
+	case ".flac":
+		return ""
+	case ".ogg":
+		return ""
+	case ".m4a":
+		return ""
+	case ".aac":
+		return ""
+	
+	// Video
+	case ".mp4":
+		return ""
+	case ".avi":
+		return ""
+	case ".mkv":
+		return ""
+	case ".mov":
+		return ""
+	case ".wmv":
+		return ""
+	case ".flv":
+		return ""
+	case ".webm":
+		return ""
+	
+	// Archives
+	case ".zip":
+		return ""
+	case ".tar", ".tgz", ".tar.gz":
+		return ""
+	case ".gz":
+		return ""
+	case ".rar":
+		return ""
+	case ".7z":
+		return ""
+	// Documents
+	case ".pdf":
+		return ""
+	case ".doc", ".docx":
+		return ""
+	case ".xls", ".xlsx":
+		return ""
+	case ".ppt", ".pptx":
+		return ""
+	case ".odt":
+		return ""
+	case ".ods":
+		return ""
+	case ".odp":
+		return ""
+	case ".rtf":
+		return ""
+	
+	// Fonts
+	case ".ttf", ".otf", ".woff", ".woff2":
+		return ""
+	
+	// Others
+	case ".txt":
+		return ""
+	case ".log":
+		return ""
+	case ".lock":
+		return ""
+	case ".tmp":
+		return ""
+	case ".bak":
+		return ""
+	case ".iso":
+		return ""
+	case ".dmg":
+		return ""
+	case ".exe":
+		return ""
+	case ".msi":
+		return ""
+	case ".app":
+		return ""
+	case ".deb":
+		return ""
+	case ".rpm":
+		return ""
+	
 	default:
-		return "📄"
+		return ""
 	}
 }
 
@@ -609,7 +954,7 @@ func (m model) View() string {
 	// Parent directory pane
 	var parentContent strings.Builder
 	if m.parentFiles != nil && len(m.parentFiles) > 0 {
-		parentContent.WriteString(fmt.Sprintf("📁 %s\n", filepath.Base(m.parentDir)))
+		parentContent.WriteString(fmt.Sprintf(" %s\n", filepath.Base(m.parentDir)))
 		parentContent.WriteString(strings.Repeat("─", parentWidth-2) + "\n")
 		
 		for i, file := range m.parentFiles {
@@ -631,7 +976,7 @@ func (m model) View() string {
 	
 	// Current directory pane
 	var currentContent strings.Builder
-	currentContent.WriteString(fmt.Sprintf("📁 %s (%d items)\n", filepath.Base(m.currentDir), len(m.files)))
+	currentContent.WriteString(fmt.Sprintf(" %s (%d items)\n", filepath.Base(m.currentDir), len(m.files)))
 	currentContent.WriteString(strings.Repeat("─", currentWidth-2) + "\n")
 	
 	if len(m.files) == 0 {
