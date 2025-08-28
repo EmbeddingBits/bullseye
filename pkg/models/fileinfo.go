@@ -16,6 +16,7 @@ type FileInfo struct {
 // Model represents the main application model
 type Model struct {
 	CurrentDir     string
+	BaseDir	   string
 	ParentDir      string
 	Files          []FileInfo
 	ParentFiles    []FileInfo

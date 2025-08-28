@@ -143,12 +143,8 @@ func renderStatusBar(m *models.Model, cfg config.Config) string {
 		}
 
 		statusParts := []string{
-			fmt.Sprintf("Dir: %s", m.CurrentDir),
+			fmt.Sprintf("Dir: %s", m.BaseDir),
 			fmt.Sprintf("Sort: %s%s", m.SortBy, sortIndicator),
-		}
-
-		if m.ShowHidden {
-			statusParts = append(statusParts, "Hidden: ON")
 		}
 
 		if len(m.Files) > 0 {

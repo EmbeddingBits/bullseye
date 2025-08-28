@@ -25,12 +25,13 @@ func NewAppModel() *AppModel {
 			Model: &models.Model{Err: err},
 		}
 	}
-
+	baseDir := filepath.Base(dir)
 	cfg := config.LoadConfig()
 
 	m := &AppModel{
 		Model: &models.Model{
 			CurrentDir: dir,
+			BaseDir: baseDir,
 			Selected:   0,
 			SortBy:     "name",
 			ShowHidden: false,
