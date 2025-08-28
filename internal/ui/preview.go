@@ -13,7 +13,7 @@ import (
 // UpdatePreview updates the preview content for the selected file
 func UpdatePreview(m *models.Model) {
 	if len(m.Files) == 0 {
-		m.Preview = "Empty directory"
+		m.Preview = "No Items" 
 		return
 	}
 

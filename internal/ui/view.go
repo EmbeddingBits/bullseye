@@ -84,7 +84,7 @@ func renderCurrentPane(m *models.Model, cfg config.Config, width, height int) st
 	content.WriteString(strings.Repeat("─", width-2) + "\n")
 
 	if len(m.Files) == 0 {
-		content.WriteString("Empty directory")
+		content.WriteString("No Items")
 	} else {
 		start := m.ListOffset
 		end := min(start+height-2, len(m.Files))
@@ -94,16 +94,10 @@ func renderCurrentPane(m *models.Model, cfg config.Config, width, height int) st
 			icon := GetFileIcon(file)
 			name := file.Entry.Name()
 
-			// Add size info for files
-			sizeInfo := ""
-			if !file.Entry.IsDir() {
-				sizeInfo = fmt.Sprintf(" (%s)", FormatSize(file.Size))
-			}
-
-			fullName := name + sizeInfo
+			fullName := name 
 			if len(fullName) > width-6 {
-				name = name[:max(1, width-9-len(sizeInfo))] + "..."
-				fullName = name + sizeInfo
+				
+				fullName = name
 			}
 
 			style := GetFileStyle(file, i == m.Selected, cfg)
