@@ -35,3 +35,4 @@ type Model struct {
 	SearchQuery    string
 }
 
+

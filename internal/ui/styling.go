@@ -44,8 +44,7 @@ func GetBorderStyle(cfg config.Config) lipgloss.Style {
 func GetPreviewBorderStyle(cfg config.Config) lipgloss.Style {
 	return lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color(cfg.PreviewBorderColor)).
-		Background(lipgloss.Color(cfg.PreviewBgColor))
+		BorderForeground(lipgloss.Color(cfg.PreviewBorderColor))
 }
 
 // GetStatusStyle returns the style for the status bar

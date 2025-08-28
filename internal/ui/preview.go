@@ -150,3 +150,4 @@ func updateFilePreview(m *models.Model, selectedFile models.FileInfo, fullPath s
 	m.Preview = sb.String()
 }
 
+
