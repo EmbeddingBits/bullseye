@@ -56,6 +56,12 @@ func renderParentPane(m *models.Model, cfg config.Config, width, height int) str
 		content.WriteString(fmt.Sprintf(" %s\n", filepath.Base(m.ParentDir)))
 		content.WriteString(strings.Repeat("─", width-2) + "\n")
 
+		// Calculate the usable space for content inside the pane's borders.
+		paneContentWidth := width - 2
+		if paneContentWidth < 0 {
+			paneContentWidth = 0
+		}
+
 		for i, file := range m.ParentFiles {
 			if i >= height-2 {
 				break
@@ -63,8 +69,19 @@ func renderParentPane(m *models.Model, cfg config.Config, width, height int) str
 
 			icon := GetFileIcon(file)
 			name := file.Entry.Name()
-			if len(name) > width-6 {
-				name = name[:width-9] + "..."
+
+			// Calculate the max width the filename can have.
+			maxNameWidth := paneContentWidth - len(icon) - 1 // -1 for the space
+
+			// Truncate the name ONLY if it exceeds the calculated max width.
+			if len(name) > maxNameWidth {
+				if maxNameWidth > 3 {
+					name = name[:maxNameWidth-3] + "..."
+				} else if maxNameWidth > 0 {
+					name = name[:maxNameWidth] // Not enough space for "...", so just chop.
+				} else {
+					name = "" // No space for the name at all.
+				}
 			}
 
 			style := GetFileStyle(file, i == m.ParentSelected, cfg)
@@ -74,34 +91,48 @@ func renderParentPane(m *models.Model, cfg config.Config, width, height int) str
 	}
 
 	borderStyle := GetBorderStyle(cfg)
+	// Force the pane to the exact width and height.
 	return borderStyle.Width(width).Height(height).Render(content.String())
 }
 
-// renderCurrentPane renders the current directory pane
+// --- CORRECTED: Current Pane Renderer ---
+// This version uses the same robust truncation logic as the parent pane.
+
 func renderCurrentPane(m *models.Model, cfg config.Config, width, height int) string {
 	var content strings.Builder
 	content.WriteString(fmt.Sprintf(" %s (%d items)\n", filepath.Base(m.CurrentDir), len(m.Files)))
 	content.WriteString(strings.Repeat("─", width-2) + "\n")
 
 	if len(m.Files) == 0 {
-		content.WriteString("No Items")
+		content.WriteString(" No Items")
 	} else {
 		start := m.ListOffset
 		end := min(start+height-2, len(m.Files))
+
+		paneContentWidth := width - 2
+		if paneContentWidth < 0 {
+			paneContentWidth = 0
+		}
 
 		for i := start; i < end; i++ {
 			file := m.Files[i]
 			icon := GetFileIcon(file)
 			name := file.Entry.Name()
 
-			fullName := name 
-			if len(fullName) > width-6 {
-				
-				fullName = name
+			maxNameWidth := paneContentWidth - len(icon) - 1
+
+			if len(name) > maxNameWidth {
+				if maxNameWidth > 3 {
+					name = name[:maxNameWidth-3] + "..."
+				} else if maxNameWidth > 0 {
+					name = name[:maxNameWidth]
+				} else {
+					name = ""
+				}
 			}
 
 			style := GetFileStyle(file, i == m.Selected, cfg)
-			line := fmt.Sprintf("%s %s", icon, fullName)
+			line := fmt.Sprintf("%s %s", icon, name)
 			content.WriteString(style.Render(line) + "\n")
 		}
 	}
@@ -110,18 +141,31 @@ func renderCurrentPane(m *models.Model, cfg config.Config, width, height int) st
 	return borderStyle.Width(width).Height(height).Render(content.String())
 }
 
-// renderPreviewPane renders the preview pane
+
+// --- CORRECTED: Preview Pane Renderer ---
+// This version truncates long lines within the text preview.
+
 func renderPreviewPane(m *models.Model, cfg config.Config, width, height int) string {
 	var content strings.Builder
 	if m.Preview != "" {
 		lines := strings.Split(m.Preview, "\n")
 		start := m.PreviewOffset
-		end := min(start+height, len(lines))
+		end := min(start+height-2, len(lines)) // -2 to account for border
 
+		paneContentWidth := width - 2 // Space inside the borders
+		if paneContentWidth < 0 {
+			paneContentWidth = 0
+		}
+		
 		for i := start; i < end; i++ {
 			line := lines[i]
-			if len(line) > width-2 {
-				line = line[:width-5] + "..."
+			// Truncate oversized preview lines.
+			if len(line) > paneContentWidth {
+				if paneContentWidth > 3 {
+					line = line[:paneContentWidth-3] + "..."
+				} else {
+					line = line[:paneContentWidth]
+				}
 			}
 			content.WriteString(line + "\n")
 		}
