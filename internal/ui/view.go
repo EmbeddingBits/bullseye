@@ -142,8 +142,9 @@ func renderStatusBar(m *models.Model, cfg config.Config) string {
 			sortIndicator = "↓"
 		}
 
+		selectedFile := m.Files[m.Selected]
 		statusParts := []string{
-			fmt.Sprintf("Dir: %s", m.BaseDir),
+			fmt.Sprintf("Dir: %s", selectedFile.Entry.Name()),
 			fmt.Sprintf("Sort: %s%s", m.SortBy, sortIndicator),
 		}
 

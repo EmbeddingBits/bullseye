@@ -39,8 +39,7 @@ func updateDirectoryPreview(m *models.Model, selectedFile models.FileInfo, fullP
 	fileutils.SortFiles(filtered, m.SortBy, m.ReverseSort)
 
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf(" %s\n", selectedFile.Entry.Name()))
-	sb.WriteString(fmt.Sprintf("Items: %d\n\n", len(filtered)))
+//	sb.WriteString(fmt.Sprintf(" %s\n", selectedFile.Entry.Name()))
 
 	for i, f := range filtered {
 		if i >= 100 { // Show more items in preview
