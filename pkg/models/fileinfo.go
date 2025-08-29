@@ -16,7 +16,7 @@ type FileInfo struct {
 // Model represents the main application model
 type Model struct {
 	CurrentDir     string
-	BaseDir	   string
+	BaseDir        string
 	ParentDir      string
 	Files          []FileInfo
 	ParentFiles    []FileInfo
@@ -34,6 +34,5 @@ type Model struct {
 	ReverseSort    bool
 	SearchMode     bool
 	SearchQuery    string
+	ImagePreviewColored bool
 }
-
-
